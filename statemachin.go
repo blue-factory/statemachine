@@ -4,6 +4,11 @@ import "log"
 
 type EventHandler func(e *Event) (*Event, error)
 
+type State struct {
+	EventHandler EventHandler
+	Destination  []string
+}
+
 var (
 	EventAbort = "abort"
 )

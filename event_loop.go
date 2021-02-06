@@ -27,9 +27,9 @@ func (sm *StateMachine) handleFunc(fn EventHandler, e *Event) {
 	event, err := fn(e)
 	if err != nil {
 		sm.defaultErrorHandler(e, err)
-		sm.SendEvent(&Event{Name: EventAbort})
+		sm.Dispatch(&Event{Name: EventAbort})
 		return
 	}
-	sm.SendEvent(event)
+	sm.Dispatch(event)
 	// after
 }

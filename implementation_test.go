@@ -15,7 +15,7 @@ func Test_StateMachine_Implementation(t *testing.T) {
 		map[string]State{
 			eventOne: State{
 				EventHandler: imp.eventOneHandler,
-				Destination:  []string{eventTwo},
+				Destination:  []string{eventTwo, EventAbort},
 			},
 			eventTwo: State{
 				EventHandler: imp.eventTwoHandler,

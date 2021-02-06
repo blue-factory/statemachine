@@ -28,11 +28,11 @@ func New(initialEvent *Event, states map[string]State) *StateMachine {
 }
 
 func (sm *StateMachine) Run() {
-	go sm.SendEvent(sm.initialEvent)
+	go sm.Dispatch(sm.initialEvent)
 	sm.eventLoop()
 }
 
-func (sm *StateMachine) SendEvent(e *Event) {
+func (sm *StateMachine) Dispatch(e *Event) {
 	sm.eventChann <- e
 }
 

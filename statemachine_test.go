@@ -6,15 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_StateMachine_SendEvent(t *testing.T) {
+func Test_StateMachine_Dispatch(t *testing.T) {
 	sm := &StateMachine{eventChann: make(chan *Event)}
 
 	firstEventSent := &Event{Name: "first"}
-	go sm.SendEvent(firstEventSent)
+	go sm.Dispatch(firstEventSent)
 	firstEvent := <-sm.eventChann
 
 	secondEventSent := &Event{Name: "second"}
-	go sm.SendEvent(secondEventSent)
+	go sm.Dispatch(secondEventSent)
 	secondEvent := <-sm.eventChann
 
 	require.NotEqual(t, firstEvent.Name, secondEvent.Name)

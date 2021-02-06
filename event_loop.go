@@ -11,14 +11,14 @@ func (sm *StateMachine) eventLoop() {
 			return
 		}
 
-		handler, ok := sm.eventHandlers[event.Name]
+		state, ok := sm.states[event.Name]
 		if !ok {
 			log.Printf("Error: unregiestered event %s", event.Name)
 			log.Println("event loop stoped")
 			return
 		}
 
-		go sm.handleFunc(handler, event)
+		go sm.handleFunc(state.EventHandler, event)
 	}
 }
 

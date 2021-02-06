@@ -14,16 +14,16 @@ var (
 )
 
 type StateMachine struct {
-	initialEvent  *Event
-	eventChann    chan *Event
-	eventHandlers map[string]EventHandler
+	initialEvent *Event
+	eventChann   chan *Event
+	states       map[string]State
 }
 
-func New(initialEvent *Event, handlers map[string]EventHandler) *StateMachine {
+func New(initialEvent *Event, states map[string]State) *StateMachine {
 	return &StateMachine{
-		initialEvent:  initialEvent,
-		eventChann:    make(chan *Event),
-		eventHandlers: handlers,
+		initialEvent: initialEvent,
+		eventChann:   make(chan *Event),
+		states:       states,
 	}
 }
 

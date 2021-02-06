@@ -12,10 +12,19 @@ func Test_StateMachine_Implementation(t *testing.T) {
 
 	sm := New(
 		&Event{Name: eventOne},
-		map[string]EventHandler{
-			eventOne:   imp.eventOneHandler,
-			eventTwo:   imp.eventTwoHandler,
-			eventThree: imp.eventThreeHandler,
+		map[string]State{
+			eventOne: State{
+				EventHandler: imp.eventOneHandler,
+				Destination:  []string{eventTwo},
+			},
+			eventTwo: State{
+				EventHandler: imp.eventTwoHandler,
+				Destination:  []string{eventThree},
+			},
+			eventThree: State{
+				EventHandler: imp.eventThreeHandler,
+				Destination:  []string{eventOne},
+			},
 		},
 	)
 

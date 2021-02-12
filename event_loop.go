@@ -13,7 +13,7 @@ func (sm *StateMachine) eventLoop() {
 
 		state, ok := sm.states[event.Name]
 		if !ok {
-			log.Printf("Error: unregiestered event %s", event.Name)
+			log.Printf("Error: unregistered event %s", event.Name)
 			log.Println("event loop stoped")
 			return
 		}
@@ -22,14 +22,12 @@ func (sm *StateMachine) eventLoop() {
 	}
 }
 
-func (sm *StateMachine) handleFunc(fn EventHandler, e *Event) {
-	// before
-	event, err := fn(e)
+func (sm *StateMachine) handleFunc(fn EventHandler, currentEvent *Event) {
+	nextEvent, err := fn(currentEvent)
 	if err != nil {
-		sm.defaultErrorHandler(e, err)
+		sm.defaultErrorHandler(currentEvent, err)
 		sm.Dispatch(&Event{Name: EventAbort})
 		return
 	}
-	sm.Dispatch(event)
-	// after
+	sm.Dispatch(nextEvent)
 }

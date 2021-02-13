@@ -27,6 +27,7 @@ func Test_StateMachine_Implementation(t *testing.T) {
 				Destination:  []string{eventOne},
 			},
 		},
+		nil,
 	)
 
 	sm.Run()
@@ -65,6 +66,7 @@ func Test_StateMachine_Implementation_Wrong_Destination(t *testing.T) {
 				Destination:  []string{eventOne},
 			},
 		},
+		nil,
 	)
 
 	sm.Run()

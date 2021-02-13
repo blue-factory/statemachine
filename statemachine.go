@@ -3,6 +3,8 @@ package statemachine
 import (
 	"fmt"
 	"log"
+
+	internallogger "github.com/blue-factory/cryptobot/internal/logger"
 )
 
 type EventHandler func(e *Event) (*Event, error)
@@ -24,9 +26,14 @@ type StateMachine struct {
 	eventChann   chan *Event
 	states       map[string]State
 	Error        error
+	logger       Logger
 }
 
-func New(initialEvent *Event, states map[string]State) *StateMachine {
+func New(initialEvent *Event, states map[string]State, logger Logger) *StateMachine {
+	if logger == nil {
+		logger = internallogger.New()
+	}
+
 	states[PristineState] = State{
 		EventHandler: func(e *Event) (*Event, error) {
 			return initialEvent, nil
@@ -39,6 +46,7 @@ func New(initialEvent *Event, states map[string]State) *StateMachine {
 		previous:     PristineState,
 		eventChann:   make(chan *Event),
 		states:       states,
+		logger:       logger,
 	}
 }
 

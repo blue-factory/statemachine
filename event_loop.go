@@ -2,32 +2,31 @@ package statemachine
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
 func (sm *StateMachine) eventLoop() {
-	log.Println("starting event loop...")
+	sm.logger.Info("starting event loop...")
 	for {
 		nextEvent := <-sm.eventChann
 		if nextEvent.Name == EventAbort {
-			log.Println("event loop aborted")
+			sm.logger.Info("event loop aborted")
 			return
 		}
 
 		nextState, ok := sm.states[nextEvent.Name]
 		if !ok {
 			sm.Error = fmt.Errorf("Error: unregistered event %s", nextEvent.Name)
-			log.Println(sm.Error)
-			log.Println("event loop stoped")
+			sm.logger.Info(sm.Error)
+			sm.logger.Info("event loop stoped")
 			return
 		}
 
 		err := sm.validateTransition(nextEvent)
 		if err != nil {
 			sm.Error = err
-			log.Println(sm.Error)
-			log.Println("event loop stoped")
+			sm.logger.Info(sm.Error)
+			sm.logger.Info("event loop stoped")
 			return
 		}
 

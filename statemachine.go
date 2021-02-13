@@ -13,18 +13,30 @@ type State struct {
 }
 
 var (
-	EventAbort = "abort"
+	EventAbort    = "abort"
+	PristineState = "pristine"
 )
 
 type StateMachine struct {
 	initialEvent *Event
+	current      string
+	previous     string
 	eventChann   chan *Event
 	states       map[string]State
+	Error        error
 }
 
 func New(initialEvent *Event, states map[string]State) *StateMachine {
+	states[PristineState] = State{
+		EventHandler: func(e *Event) (*Event, error) {
+			return initialEvent, nil
+		},
+		Destination: []string{initialEvent.Name},
+	}
 	return &StateMachine{
 		initialEvent: initialEvent,
+		current:      PristineState,
+		previous:     PristineState,
 		eventChann:   make(chan *Event),
 		states:       states,
 	}

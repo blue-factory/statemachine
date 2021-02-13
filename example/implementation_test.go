@@ -31,6 +31,7 @@ func Test_StateMachine_Implementation(t *testing.T) {
 
 	sm.Run()
 
+	require.NoError(t, sm.Error)
 	require.Equal(t, imp.cycles, len(imp.eventOneCalls))
 	require.Equal(t, imp.cycles, len(imp.eventTwoCalls))
 	require.Equal(t, imp.cycles, len(imp.eventThreeCalls))
@@ -40,4 +41,33 @@ func Test_StateMachine_Implementation(t *testing.T) {
 		require.Equal(t, imp.eventOneCalls[i], imp.eventThreeCalls[i])
 		require.Equal(t, imp.eventTwoCalls[i], imp.eventThreeCalls[i])
 	}
+}
+
+func Test_StateMachine_Implementation_Wrong_Destination(t *testing.T) {
+	maxCycles := 10
+	imp := &implementation{maxCycles: maxCycles}
+
+	sm := statemachine.New(
+		&statemachine.Event{Name: eventOne},
+		map[string]statemachine.State{
+			eventOne: statemachine.State{
+				EventHandler: imp.eventOneHandler,
+				Destination:  []string{eventTwo, statemachine.EventAbort},
+			},
+			eventTwo: statemachine.State{
+				EventHandler: func(e *statemachine.Event) (*statemachine.Event, error) {
+					return &statemachine.Event{Name: eventOne}, nil
+				},
+				Destination: []string{eventThree},
+			},
+			eventThree: statemachine.State{
+				EventHandler: imp.eventThreeHandler,
+				Destination:  []string{eventOne},
+			},
+		},
+	)
+
+	sm.Run()
+
+	require.Equal(t, sm.Error.Error(), `Error: cannot go to next state, wrong destination. From state "two" to state "one"`)
 }

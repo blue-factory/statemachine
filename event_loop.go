@@ -1,33 +1,66 @@
 package statemachine
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"strings"
+)
 
 func (sm *StateMachine) eventLoop() {
 	log.Println("starting event loop...")
 	for {
-		event := <-sm.eventChann
-		if event.Name == EventAbort {
+		nextEvent := <-sm.eventChann
+		if nextEvent.Name == EventAbort {
 			log.Println("event loop aborted")
 			return
 		}
 
-		state, ok := sm.states[event.Name]
+		nextState, ok := sm.states[nextEvent.Name]
 		if !ok {
-			log.Printf("Error: unregistered event %s", event.Name)
+			sm.Error = fmt.Errorf("Error: unregistered event %s", nextEvent.Name)
+			log.Println(sm.Error)
 			log.Println("event loop stoped")
 			return
 		}
 
-		go sm.handleFunc(state.EventHandler, event)
+		err := sm.validateTransition(nextEvent)
+		if err != nil {
+			sm.Error = err
+			log.Println(sm.Error)
+			log.Println("event loop stoped")
+			return
+		}
+
+		eventToDispatch, err := sm.handleFunc(nextState.EventHandler, nextEvent)
+		if err != nil {
+			eventToDispatch = &Event{Name: EventAbort}
+			sm.defaultErrorHandler(nextEvent, err)
+		}
+
+		go sm.Dispatch(eventToDispatch)
 	}
 }
 
-func (sm *StateMachine) handleFunc(fn EventHandler, currentEvent *Event) {
-	nextEvent, err := fn(currentEvent)
+func (sm *StateMachine) handleFunc(fn EventHandler, event *Event) (*Event, error) {
+	nextEvent, err := fn(event)
 	if err != nil {
-		sm.defaultErrorHandler(currentEvent, err)
-		sm.Dispatch(&Event{Name: EventAbort})
-		return
+		return nil, err
 	}
-	sm.Dispatch(nextEvent)
+	sm.previous = sm.current
+	sm.current = event.Name
+
+	return nextEvent, nil
+}
+
+func (sm *StateMachine) validateTransition(event *Event) error {
+	currentState, ok := sm.states[sm.current]
+	if !ok {
+		return fmt.Errorf("Error: current state does not exists. %q", sm.current)
+	}
+
+	if sm.current != PristineState && !strings.Contains(strings.Join(currentState.Destination, " $ "), event.Name) {
+		return fmt.Errorf("Error: cannot go to next state, wrong destination. From state %q to state %q", sm.current, event.Name)
+	}
+
+	return nil
 }

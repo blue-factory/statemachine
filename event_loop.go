@@ -7,8 +7,7 @@ import (
 
 func (sm *StateMachine) eventLoop() {
 	sm.logger.Info("starting event loop...")
-	for {
-		nextEvent := <-sm.eventChann
+	for nextEvent := range sm.eventChann {
 		if nextEvent.Name == EventAbort {
 			sm.logger.Info("event loop aborted")
 			return

@@ -55,8 +55,11 @@ func (sm *StateMachine) Run() {
 	sm.eventLoop()
 }
 
-func (sm *StateMachine) Dispatch(e *Event) {
+func (sm *StateMachine) Dispatch(e *Event) chan error {
+	e.done = make(chan error, 1)
 	sm.eventChann <- e
+
+	return e.done
 }
 
 func (sm *StateMachine) Render() string {

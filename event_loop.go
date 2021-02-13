@@ -42,10 +42,12 @@ func (sm *StateMachine) eventLoop() {
 func (sm *StateMachine) handleFunc(fn EventHandler, event *Event) (*Event, error) {
 	nextEvent, err := fn(event)
 	if err != nil {
+		event.done <- err
 		return nil, err
 	}
 	sm.previous = sm.current
 	sm.current = event.Name
+	event.done <- nil
 
 	return nextEvent, nil
 }

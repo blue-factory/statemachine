@@ -14,15 +14,15 @@ func Test_StateMachine_Implementation(t *testing.T) {
 	sm := statemachine.New(
 		&statemachine.Event{Name: eventOne},
 		map[string]statemachine.State{
-			eventOne: statemachine.State{
+			eventOne: {
 				EventHandler: imp.eventOneHandler,
 				Destination:  []string{eventTwo, statemachine.EventAbort},
 			},
-			eventTwo: statemachine.State{
+			eventTwo: {
 				EventHandler: imp.eventTwoHandler,
 				Destination:  []string{eventThree},
 			},
-			eventThree: statemachine.State{
+			eventThree: {
 				EventHandler: imp.eventThreeHandler,
 				Destination:  []string{eventOne},
 			},

@@ -49,6 +49,12 @@ func (sm *StateMachine) handleFunc(fn EventHandler, event *Event) (*Event, error
 	sm.current = event.Name
 	event.done <- nil
 
+	go func() {
+		if err := sm.onStateChange(sm.current); err != nil {
+			sm.logger.Info("Warning: error when calling onStateChange callback")
+		}
+	}()
+
 	return nextEvent, nil
 }
 

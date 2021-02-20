@@ -9,6 +9,8 @@ func (sm *StateMachine) eventLoop() {
 	sm.logger.Info("starting event loop...")
 	for nextEvent := range sm.eventChann {
 		if nextEvent.Name == EventAbort {
+			sm.current = PristineState
+			sm.previous = PristineState
 			sm.logger.Info("event loop aborted")
 			return
 		}

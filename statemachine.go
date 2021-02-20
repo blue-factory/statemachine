@@ -45,11 +45,17 @@ func New(initialEvent *Event, states map[string]State, logger Logger) *StateMach
 		},
 		Destination: []string{initialEvent.Name},
 	}
+	states[EventAbort] = State{
+		EventHandler: func(e *Event) (*Event, error) {
+			return initialEvent, nil
+		},
+		Destination: []string{initialEvent.Name},
+	}
+
 	return &StateMachine{
 		initialEvent:  initialEvent,
 		current:       PristineState,
 		previous:      PristineState,
-		eventChann:    make(chan *Event),
 		states:        states,
 		logger:        logger,
 		onStateChange: noopOnStateChange,
@@ -61,6 +67,7 @@ func (sm *StateMachine) OnStateChange(fn OnStateChangeHandler) {
 }
 
 func (sm *StateMachine) Run() {
+	sm.eventChann = make(chan *Event)
 	go sm.Dispatch(sm.initialEvent)
 	sm.eventLoop()
 }

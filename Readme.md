@@ -46,10 +46,16 @@ func main() {
 		logger,
 	)
 }
+
+func handleFinishFn(e *statemachine.Event) (*statemachine.Event, error) {
+	return &statemachine.Event{Name: statemachine.EventAbort}, nil
+}
 ```
 
 
 You can also print a mermaid diagram based on your statemachine implementation and this is an example of the result
 
 <img width="508" alt="Screen Shot 2021-04-24 at 6 45 01 PM" src="https://user-images.githubusercontent.com/8041435/115974796-6154f080-a52d-11eb-8b7c-19339d2fccbc.png">
+
+For more use cases see the folder examples.
 

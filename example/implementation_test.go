@@ -1,9 +1,10 @@
 package statemachine
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/blue-factory/cryptobot/internal/statemachine"
+	"github.com/blue-factory/statemachine"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,6 +32,11 @@ func Test_StateMachine_Implementation(t *testing.T) {
 	)
 
 	sm.Run()
+	fmt.Println("----------------------")
+	fmt.Println("----------------------")
+	fmt.Println(sm.RenderMermaid())
+	fmt.Println("----------------------")
+	fmt.Println("----------------------")
 
 	require.NoError(t, sm.Error)
 	require.Equal(t, imp.cycles, len(imp.eventOneCalls))

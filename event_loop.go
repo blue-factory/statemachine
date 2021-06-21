@@ -6,28 +6,28 @@ import (
 )
 
 func (sm *StateMachine) eventLoop() {
-	sm.logger.Info("starting event loop...")
+	sm.logger.Infof("starting event loop...")
 	for nextEvent := range sm.eventChann {
 		if nextEvent.Name == EventAbort {
 			sm.current = PristineState
 			sm.previous = PristineState
-			sm.logger.Info("event loop aborted")
+			sm.logger.Infof("event loop aborted")
 			return
 		}
 
 		nextState, ok := sm.states[nextEvent.Name]
 		if !ok {
 			sm.Error = fmt.Errorf("Error: unregistered event %s", nextEvent.Name)
-			sm.logger.Info(sm.Error)
-			sm.logger.Info("event loop stoped")
+			sm.logger.Infof(sm.Error.Error())
+			sm.logger.Infof("event loop stoped")
 			return
 		}
 
 		err := sm.validateTransition(nextEvent)
 		if err != nil {
 			sm.Error = err
-			sm.logger.Info(sm.Error)
-			sm.logger.Info("event loop stoped")
+			sm.logger.Infof(sm.Error.Error())
+			sm.logger.Infof("event loop stoped")
 			return
 		}
 
@@ -53,7 +53,7 @@ func (sm *StateMachine) handleFunc(fn EventHandler, event *Event) (*Event, error
 
 	go func() {
 		if err := sm.onStateChange(sm.current); err != nil {
-			sm.logger.Info("Warning: error when calling onStateChange callback")
+			sm.logger.Infof("Warning: error when calling onStateChange callback")
 		}
 	}()
 

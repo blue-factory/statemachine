@@ -3,9 +3,8 @@ package statemachine
 import (
 	"bytes"
 	"fmt"
-	"log"
 
-	internallogger "github.com/blue-factory/cryptobot/internal/logger"
+	log "github.com/sirupsen/logrus"
 )
 
 type EventHandler func(e *Event) (*Event, error)
@@ -36,7 +35,7 @@ func noopOnStateChange(state string) error { return nil }
 
 func New(initialEvent *Event, states map[string]State, logger Logger) *StateMachine {
 	if logger == nil {
-		logger = internallogger.New()
+		logger = log.New()
 	}
 
 	states[PristineState] = State{
@@ -126,5 +125,5 @@ func (sm *StateMachine) RenderMermaid() string {
 }
 
 func (sm *StateMachine) defaultErrorHandler(e *Event, err error) {
-	log.Printf("Error\nevent: %s\nerror: %s", e.Name, err.Error())
+	sm.logger.Infof("Error\nevent: %s\nerror: %s", e.Name, err.Error())
 }

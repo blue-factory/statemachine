@@ -238,12 +238,37 @@
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 const angle = Math.atan2(dy, dx);
                 
-                // Ajustar el punto de inicio y fin para que la flecha no se superponga con los círculos
-                const circleRadius = 30;
-                const startX = from.x + circleRadius * Math.cos(angle);
-                const startY = from.y + circleRadius * Math.sin(angle);
-                const endX = to.x - circleRadius * Math.cos(angle);
-                const endY = to.y - circleRadius * Math.sin(angle);
+                // Obtener los radios de los nodos de origen y destino
+                const fromState = transition.from;
+                const toState = transition.to;
+                
+                // Crear elementos temporales para medir el texto
+                const fromTempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                fromTempText.setAttribute('class', 'state-label');
+                fromTempText.textContent = fromState;
+                svg.appendChild(fromTempText);
+                const fromTextWidth = fromTempText.getBBox().width;
+                const fromTextHeight = fromTempText.getBBox().height;
+                svg.removeChild(fromTempText);
+                
+                const toTempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                toTempText.setAttribute('class', 'state-label');
+                toTempText.textContent = toState;
+                svg.appendChild(toTempText);
+                const toTextWidth = toTempText.getBBox().width;
+                const toTextHeight = toTempText.getBBox().height;
+                svg.removeChild(toTempText);
+                
+                // Calcular los radios de los nodos
+                const padding = 10;
+                const fromRadius = Math.max(fromTextWidth, fromTextHeight) / 2 + padding;
+                const toRadius = Math.max(toTextWidth, toTextHeight) / 2 + padding;
+                
+                // Ajustar el punto de inicio y fin para que la flecha toque la circunferencia
+                const startX = from.x + fromRadius * Math.cos(angle);
+                const startY = from.y + fromRadius * Math.sin(angle);
+                const endX = to.x - toRadius * Math.cos(angle);
+                const endY = to.y - toRadius * Math.sin(angle);
                 
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', startX);
@@ -258,11 +283,24 @@
             states.forEach(state => {
                 const pos = statePositions[state];
                 
+                // Crear un elemento temporal para medir el texto
+                const tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tempText.setAttribute('class', 'state-label');
+                tempText.textContent = state;
+                svg.appendChild(tempText);
+                const textWidth = tempText.getBBox().width;
+                const textHeight = tempText.getBBox().height;
+                svg.removeChild(tempText);
+                
+                // Calcular el radio basado en el tamaño del texto
+                const padding = 10; // Padding alrededor del texto
+                const radius = Math.max(textWidth, textHeight) / 2 + padding;
+                
                 // Dibujar el círculo
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', pos.x);
                 circle.setAttribute('cy', pos.y);
-                circle.setAttribute('r', 30);
+                circle.setAttribute('r', radius);
                 circle.setAttribute('class', 'state');
                 svg.appendChild(circle);
                 
@@ -301,6 +339,34 @@
                 updateStateColors();
             }
         });
+
+        function drawNode(node, x, y) {
+            const ctx = canvas.getContext('2d');
+            const nodeRadius = Math.max(30, node.id.length * 15); // Radio proporcional al nombre del estado
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, nodeRadius);
+            
+            // Color del nodo basado en si es el estado actual o anterior
+            const baseColor = node.id === currentState ? '#4CAF50' : 
+                            node.id === previousState ? '#F44336' : '#3f51b5';
+            
+            gradient.addColorStop(0, baseColor);
+            gradient.addColorStop(1, shadeColor(baseColor, -20));
+            
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Texto del estado
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Roboto';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.id, x, y);
+        }
     </script>
 </body>
 </html> 

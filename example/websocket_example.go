@@ -12,15 +12,15 @@ import (
 func main() {
 	// Creamos una máquina de estados simple
 	sm := statemachine.New(
-		&statemachine.Event{Name: "start"},
+		&statemachine.Event{Name: "start-foo-bar-baz-zar"},
 		map[string]statemachine.State{
-			"start": {
+			"start-foo-bar-baz-zar": {
 				EventHandler: func(e *statemachine.Event) (*statemachine.Event, error) {
 					// Esperamos 2 segundos antes de la transición
 					time.Sleep(2 * time.Second)
 					return &statemachine.Event{Name: "state-mid"}, nil
 				},
-				Destination: []string{"state-mid"},
+				Destination: []string{"state-mid", "state-end"},
 			},
 			"state-mid": {
 				EventHandler: func(e *statemachine.Event) (*statemachine.Event, error) {
@@ -34,9 +34,9 @@ func main() {
 				EventHandler: func(e *statemachine.Event) (*statemachine.Event, error) {
 					// Esperamos 2 segundos antes de la transición
 					time.Sleep(2 * time.Second)
-					return &statemachine.Event{Name: "start"}, nil
+					return &statemachine.Event{Name: "start-foo-bar-baz-zar"}, nil
 				},
-				Destination: []string{"start"},
+				Destination: []string{"start-foo-bar-baz-zar"},
 			},
 		},
 		nil,
@@ -68,4 +68,4 @@ func main() {
 	// Iniciamos el servidor HTTP
 	log.Println("Servidor iniciado en http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
-} 
+}

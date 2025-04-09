@@ -48,6 +48,11 @@ func main() {
 	// Configuramos el handler para el WebSocket
 	http.HandleFunc("/ws", wsManager.HandleWebSocket)
 
+	// Servir el archivo HTML
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "example/frontend.html")
+	})
+
 	// Conectamos el WebSocket Manager con los cambios de estado
 	sm.OnStateChange(func(state string) error {
 		wsManager.BroadcastStateChange(sm.GetPreviousState(), state)

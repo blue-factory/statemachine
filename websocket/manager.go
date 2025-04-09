@@ -122,27 +122,44 @@ func (m *WebSocketManager) generateStateMachineInfo() []byte {
 	info := map[string]interface{}{
 		"type": "state_machine_info",
 		"data": map[string]interface{}{
-			"states":      make([]string, 0),
+			"states":     make([]string, 0),
 			"transitions": make([]map[string]string, 0),
 		},
 	}
 
 	states := m.stateMachine.GetStates()
-	for stateName, state := range states {
-		info["data"].(map[string]interface{})["states"] = append(
-			info["data"].(map[string]interface{})["states"].([]string),
-			stateName,
-		)
-
-		for _, dest := range state.Destination {
-			transition := map[string]string{
-				"from": stateName,
-				"to":   dest,
-			}
-			info["data"].(map[string]interface{})["transitions"] = append(
-				info["data"].(map[string]interface{})["transitions"].([]map[string]string),
-				transition,
+	
+	// Estados internos que no queremos exponer
+	internalStates := map[string]bool{
+		statemachine.PristineState: true,
+		statemachine.EventAbort:    true,
+	}
+	
+	// Primero, recolectamos todos los estados no internos
+	for stateName := range states {
+		if !internalStates[stateName] {
+			info["data"].(map[string]interface{})["states"] = append(
+				info["data"].(map[string]interface{})["states"].([]string),
+				stateName,
 			)
+		}
+	}
+
+	// Luego, recolectamos las transiciones que no involucran estados internos
+	for stateName, state := range states {
+		if !internalStates[stateName] {
+			for _, dest := range state.Destination {
+				if !internalStates[dest] {
+					transition := map[string]string{
+						"from": stateName,
+						"to":   dest,
+					}
+					info["data"].(map[string]interface{})["transitions"] = append(
+						info["data"].(map[string]interface{})["transitions"].([]map[string]string),
+						transition,
+					)
+				}
+			}
 		}
 	}
 

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Machine Visualizer</title>
+    <!-- Material Design Lite -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .mdl-layout__header {
+            background-color: #3f51b5;
+        }
+        .mdl-layout__title {
+            color: white;
+        }
+        .mdl-layout__drawer-button {
+            color: white;
+        }
+        .page-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .mdl-card {
+            width: 100%;
+            min-height: 500px;
+            margin-bottom: 20px;
+        }
+        .mdl-card__title {
+            background-color: #3f51b5;
+            color: white;
+        }
+        #stateMachine {
+            width: 100%;
+            height: 500px;
+            background-color: white;
+        }
+        .state {
+            fill: #fff;
+            stroke: #3f51b5;
+            stroke-width: 2;
+        }
+        .state.current {
+            fill: #4CAF50; /* Verde Material Design */
+        }
+        .state.previous {
+            fill: #F44336; /* Rojo Material Design */
+        }
+        .transition {
+            stroke: #3f51b5;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+        #arrowhead {
+            fill: #3f51b5;
+        }
+        .state-label {
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Roboto', sans-serif;
+        }
+        .status-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        .status-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .current-color {
+            background-color: #4CAF50;
+        }
+        .previous-color {
+            background-color: #F44336;
+        }
+        .default-color {
+            background-color: #fff;
+            border: 2px solid #3f51b5;
+        }
+    </style>
+</head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout-icon"></div>
+            <div class="mdl-layout__header-row">
+                <span class="mdl-layout__title">State Machine Visualizer</span>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout__title">State Machine Visualizer</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="#">Home</a>
+                <a class="mdl-navigation__link" href="#">About</a>
+            </nav>
+        </div>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div class="card-container">
+                    <div class="mdl-card mdl-shadow--2dp">
+                        <div class="mdl-card__title">
+                            <h2 class="mdl-card__title-text">State Machine Diagram</h2>
+                        </div>
+                        <div class="mdl-card__supporting-text">
+                            <div id="stateMachine"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-container">
+                    <div class="status-item">
+                        <div class="status-color current-color"></div>
+                        <span>Current State</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-color previous-color"></div>
+                        <span>Previous State</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-color default-color"></div>
+                        <span>Other States</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Conectar al WebSocket
+        const ws = new WebSocket('ws://localhost:8080/ws');
+
+        // Crear el SVG
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('id', 'stateMachine');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        document.getElementById('stateMachine').appendChild(svg);
+
+        // Definir el marcador de flecha
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '7');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '3.5');
+        marker.setAttribute('orient', 'auto');
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+        polygon.setAttribute('fill', '#3f51b5');
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+
+        // Variables para almacenar los estados y transiciones
+        let states = [];
+        let transitions = [];
+        let currentState = '';
+        let previousState = '';
+
+        // Manejar mensajes del WebSocket
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'state_machine_info') {
+                // Actualizar estados y transiciones
+                states = data.data.states;
+                transitions = data.data.transitions;
+
+                // Dibujar la máquina de estados
+                drawStateMachine();
+            } else if (data.type === 'state_change') {
+                // Actualizar estados actual y anterior
+                previousState = data.data.previous_state;
+                currentState = data.data.current_state;
+
+                // Actualizar colores de los estados
+                updateStateColors();
+            }
+        };
+
+        // Dibujar la máquina de estados
+        function drawStateMachine() {
+            // Limpiar el SVG
+            while (svg.childNodes.length > 1) {
+                svg.removeChild(svg.lastChild);
+            }
+
+            // Obtener dimensiones del contenedor
+            const container = document.getElementById('stateMachine');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Calcular posiciones de los estados
+            const statePositions = {};
+            const radius = Math.min(width, height) * 0.35; // Radio más grande
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const angleStep = (2 * Math.PI) / states.length;
+
+            states.forEach((state, index) => {
+                const angle = index * angleStep;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                statePositions[state] = { x, y };
+            });
+
+            // Dibujar transiciones
+            transitions.forEach(transition => {
+                const from = statePositions[transition.from];
+                const to = statePositions[transition.to];
+                
+                // Calcular el punto de inicio y fin de la flecha
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                // Ajustar el punto de inicio y fin para que la flecha no se superponga con los círculos
+                const circleRadius = 30;
+                const startX = from.x + circleRadius * Math.cos(angle);
+                const startY = from.y + circleRadius * Math.sin(angle);
+                const endX = to.x - circleRadius * Math.cos(angle);
+                const endY = to.y - circleRadius * Math.sin(angle);
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', endX);
+                line.setAttribute('y2', endY);
+                line.setAttribute('class', 'transition');
+                svg.appendChild(line);
+            });
+
+            // Dibujar estados
+            states.forEach(state => {
+                const pos = statePositions[state];
+                
+                // Dibujar el círculo
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', 30);
+                circle.setAttribute('class', 'state');
+                svg.appendChild(circle);
+                
+                // Dibujar el texto
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('class', 'state-label');
+                text.textContent = state;
+                svg.appendChild(text);
+            });
+        }
+
+        // Actualizar colores de los estados
+        function updateStateColors() {
+            const circles = svg.getElementsByClassName('state');
+            for (let i = 0; i < circles.length; i++) {
+                const circle = circles[i];
+                const state = circle.nextSibling.textContent;
+                if (state === currentState) {
+                    circle.setAttribute('class', 'state current');
+                } else if (state === previousState) {
+                    circle.setAttribute('class', 'state previous');
+                } else {
+                    circle.setAttribute('class', 'state');
+                }
+            }
+        }
+        
+        // Manejar cambios de tamaño de la ventana
+        window.addEventListener('resize', function() {
+            if (states.length > 0) {
+                drawStateMachine();
+                updateStateColors();
+            }
+        });
+    </script>
+</body>
+</html> 

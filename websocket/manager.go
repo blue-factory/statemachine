@@ -32,16 +32,16 @@ type WebSocketManager struct {
 // NewWebSocketManager crea una nueva instancia del WebSocket Manager
 func NewWebSocketManager(sm *statemachine.StateMachine) *WebSocketManager {
 	manager := &WebSocketManager{
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		clients:      make(map[*Client]bool),
+		broadcast:    make(chan []byte),
+		register:     make(chan *Client),
+		unregister:   make(chan *Client),
 		stateMachine: sm,
 	}
-	
+
 	// Pre-generamos el JSON con la información de la máquina de estados
 	manager.stateMachineInfo = manager.generateStateMachineInfo()
-	
+
 	return manager
 }
 
@@ -96,7 +96,6 @@ func (m *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	m.register <- client
 
 	go client.writePump()
-	go client.readPump()
 }
 
 // BroadcastStateChange envía un mensaje de cambio de estado a todos los clientes
@@ -123,7 +122,7 @@ func (m *WebSocketManager) generateStateMachineInfo() []byte {
 	info := map[string]interface{}{
 		"type": "state_machine_info",
 		"data": map[string]interface{}{
-			"states":     make([]string, 0),
+			"states":      make([]string, 0),
 			"transitions": make([]map[string]string, 0),
 		},
 	}
@@ -154,4 +153,4 @@ func (m *WebSocketManager) generateStateMachineInfo() []byte {
 	}
 
 	return jsonData
-} 
+}

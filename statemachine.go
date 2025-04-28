@@ -127,3 +127,13 @@ func (sm *StateMachine) RenderMermaid() string {
 func (sm *StateMachine) defaultErrorHandler(e *Event, err error) {
 	sm.logger.Infof("Error\nevent: %s\nerror: %s", e.Name, err.Error())
 }
+
+// GetStates returns a map of states and its transitions
+func (sm *StateMachine) GetStates() map[string]State {
+	return sm.states
+}
+
+// GetPreviousState returns the previous state
+func (sm *StateMachine) GetPreviousState() string {
+	return sm.previous
+}
